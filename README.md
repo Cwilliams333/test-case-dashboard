@@ -2,7 +2,6 @@
 
 A comprehensive web application for monitoring and tracking test case status across different device configurations. This dashboard allows for efficient comparison of test results across multiple device models and manufacturers.
 
-![Dashboard Preview](https://via.placeholder.com/800x450)
 
 ## Features
 
