@@ -1,70 +1,137 @@
-# Getting Started with Create React App
+# Device Test Case Monitoring Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive web application for monitoring and tracking test case status across different device configurations. This dashboard allows for efficient comparison of test results across multiple device models and manufacturers.
 
-## Available Scripts
+![Dashboard Preview](https://via.placeholder.com/800x450)
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- **Device Management**: Browse and select from multiple device manufacturers (Apple, Google, Samsung, Motorola, TCL, etc.)
+- **Test Case Tracking**: Monitor which tests are enabled or disabled for each device
+- **Comparison Mode**: Compare test statuses across multiple devices simultaneously
+- **Configuration Viewer/Editor**: View and edit device configurations with syntax highlighting
+- **Filtering Options**: Filter test cases by status (all, disabled, recent changes)
+- **Export Capabilities**: Export test case reports in CSV format
+- **Dark/Light Mode**: Toggle between dark and light interface themes
+- **Responsive Design**: Works on desktop and mobile browsers
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Technology Stack
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Frontend**: React.js with modern hooks and functional components
+- **Backend**: Node.js with Express
+- **Styling**: Tailwind CSS for responsive and clean UI
+- **State Management**: React hooks for local state management
+- **Code Organization**: Modular architecture with separated concerns
 
-### `npm test`
+## Getting Started
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
 
-### `npm run build`
+- Node.js (v14.0 or higher)
+- npm (v7.0 or higher)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Installation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/device-test-monitoring-dashboard.git
+   cd device-test-monitoring-dashboard
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### `npm run eject`
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+4. Build for production:
+   ```bash
+   npm run build
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+5. Start the production server:
+   ```bash
+   npm start
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+The application will be available at `http://localhost:3001`.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Project Structure
 
-## Learn More
+```
+├── public/
+├── src/
+│   ├── api/
+│   │   └── index.js            # API client functions
+│   ├── components/
+│   │   ├── Modal.js            # Reusable modal component
+│   │   ├── SyntaxHighlighter.js # Config file syntax highlighter
+│   │   └── TestCaseMonitoringDashboard.js # Main dashboard component
+│   ├── data/
+│   │   └── testCaseMapping.js  # Test case data mappings
+│   ├── utils/
+│   │   └── parseConfig.js      # Configuration file parser
+│   └── server.js               # Express backend server
+└── package.json
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## API Endpoints
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The dashboard communicates with a Node.js backend server through these endpoints:
 
-### Code Splitting
+- `GET /api/devices` - Get all manufacturers and device models
+- `GET /api/pythia-config` - Get Pythia configuration mapping
+- `GET /api/device?model=[modelName]` - Get device configuration by model name
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Configuration Files
 
-### Analyzing the Bundle Size
+The system reads and processes `.ini` configuration files with device specifications:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- Each device has its own `.ini` configuration file
+- Test cases are enabled/disabled based on configuration sections
+- The system maps configuration sections to test cases using predefined mappings
 
-### Making a Progressive Web App
+## Usage Examples
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Single Device Inspection
 
-### Advanced Configuration
+1. Select a manufacturer (e.g., Apple)
+2. Choose a specific device model (e.g., iPhone 14 Pro)
+3. View enabled/disabled test cases
+4. Click "View Configuration" to see or edit the raw config file
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Multi-Device Comparison
 
-### Deployment
+1. Toggle "Enter Comparison Mode"
+2. Select multiple devices from the same manufacturer
+3. View a side-by-side comparison of test case statuses
+4. Export the comparison as a CSV report
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Configuration Editing
 
-### `npm run build` fails to minify
+1. Select a device and view its configuration
+2. Toggle "Edit Mode" in the configuration viewer
+3. Make desired changes to the configuration
+4. Save changes to update the test case statuses
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Test framework integration with mobile device configurations
+- Advanced React patterns for efficient state management
+- Responsive design principles with Tailwind CSS
