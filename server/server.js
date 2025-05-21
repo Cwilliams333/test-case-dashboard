@@ -7,8 +7,8 @@ const app = express();
 const PORT = 3001;
 
 // Define paths to your configuration files
-const CONFIG_DIR = '/home/player3vsgpt/Documents/dut_configurations';
-const PYTHIA_CONFIG_PATH = '/home/player3vsgpt/Documents/pythia.conf';
+const CONFIG_DIR = '/home/..;
+const PYTHIA_CONFIG_PATH = '/home/... ;
 
 // Function to determine the correct manufacturer based on model name
 const categorizeManufacturer = (modelName) => {
@@ -170,7 +170,7 @@ app.get('/api/device', (req, res) => {
     const files = fs.readdirSync(CONFIG_DIR);
     let configContent = null;
     
-    // Find the file that contains this model
+    // Find the file that has this model
     for (const file of files) {
       if (file.endsWith('.ini')) {
         try {
@@ -197,14 +197,14 @@ app.get('/api/device', (req, res) => {
 });
 
 // This should be AFTER all API routes
-// Handle all other GET requests by serving the React app
+// Handle all other GET requests by serving the dashboard
 app.get('*', (req, res) => {
   // Check if the request is for an API endpoint
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
   
-  // Otherwise serve the React app
+  // Otherwise serve the app
   res.sendFile(path.join(__dirname, '../build', 'index.html'));
 });
 
