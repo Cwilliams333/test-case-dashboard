@@ -1,18 +1,23 @@
 const { Pool } = require('pg');
 const fs = require('fs').promises;
 const path = require('path');
+require('dotenv').config();
 
 const pool = new Pool({
-  user: 'testcase_user',
-  host: 'localhost',
-  database: 'testcase_configs',
-  password: '12345',
-  port: 5432
+  user: process.env.DB_USER || 'testcase_user',
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_NAME || 'testcase_configs',
+  password: process.env.DB_PASSWORD || '12345',
+  port: process.env.DB_PORT || 5432
 });
 
 async function uploadConfigs() {
-  const configDir = '/home/player2vscpu/Desktop/test-case-dashboard/Docs/dut_configurations';
-  const pythiaPath = '/home/player2vscpu/Desktop/test-case-dashboard/Docs/pythia.conf';
+  const configDir = process.env.CONFIG_DIR || '/home/player2vscpu/Desktop/test-case-dashboard/Docs/dut_configurations';
+  const pythiaPath = process.env.PYTHIA_CONFIG || '/home/player2vscpu/Desktop/test-case-dashboard/Docs/pythia.conf';
+  
+  console.log('Configuration paths:');
+  console.log(`  CONFIG_DIR: ${configDir}`);
+  console.log(`  PYTHIA_CONFIG: ${pythiaPath}`);
 
   try {
     // Upload device configs (.ini files)

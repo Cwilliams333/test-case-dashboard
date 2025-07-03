@@ -2,13 +2,19 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
 const PORT = 3001;
 
-// Define paths to your configuration files
-const CONFIG_DIR = '/home/player2vscpu/Desktop/test-case-dashboard/Docs/dut_configurations';
-const PYTHIA_CONFIG_PATH = '/home/player2vscpu/Desktop/test-case-dashboard/Docs/pythia.conf';
+// Define paths to your configuration files from environment variables
+const CONFIG_DIR = process.env.CONFIG_DIR || '/home/player2vscpu/Desktop/test-case-dashboard/Docs/dut_configurations';
+const PYTHIA_CONFIG_PATH = process.env.PYTHIA_CONFIG || '/home/player2vscpu/Desktop/test-case-dashboard/Docs/pythia.conf';
+
+// Log configuration paths on startup
+console.log('Configuration paths:');
+console.log(`  CONFIG_DIR: ${CONFIG_DIR}`);
+console.log(`  PYTHIA_CONFIG: ${PYTHIA_CONFIG_PATH}`);
 
 // Function to determine the correct manufacturer based on model name
 const categorizeManufacturer = (modelName) => {

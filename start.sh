@@ -20,10 +20,26 @@ if [ ! -f "package.json" ] || [ ! -f "server/package.json" ]; then
   exit 1
 fi
 
-# Confirm configuration paths exist
-CONFIG_DIR="/home/player3vsgpt/Documents/dut_configurations"
-PYTHIA_CONFIG="/home/player3vsgpt/Documents/pythia.conf"
+# Load environment variables if .env exists
+if [ -f ".env" ]; then
+  export $(grep -v '^#' .env | xargs)
+  echo "Loaded configuration from .env file"
+else
+  echo "No .env file found. Using default paths or environment variables."
+  echo "Copy .env.example to .env and update paths for your system."
+fi
 
+# Use environment variables or defaults
+CONFIG_DIR="${CONFIG_DIR:-/home/player2vscpu/Desktop/test-case-dashboard/Docs/dut_configurations}"
+PYTHIA_CONFIG="${PYTHIA_CONFIG:-/home/player2vscpu/Desktop/test-case-dashboard/Docs/pythia.conf}"
+
+echo ""
+echo "Configuration paths:"
+echo "  CONFIG_DIR: $CONFIG_DIR"
+echo "  PYTHIA_CONFIG: $PYTHIA_CONFIG"
+echo ""
+
+# Confirm configuration paths exist
 if [ ! -d "$CONFIG_DIR" ]; then
   echo "Warning: Device configurations directory not found at $CONFIG_DIR"
   read -p "Continue anyway? (y/n) " -n 1 -r

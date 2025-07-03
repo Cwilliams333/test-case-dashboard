@@ -49,6 +49,15 @@ A comprehensive web application for monitoring and managing test case configurat
    cd ..
    ```
 
+3. Configure environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+   Then edit `.env` and update the paths to match your system:
+   - `CONFIG_DIR` - Path to your device configuration (.ini) files
+   - `PYTHIA_CONFIG` - Path to your pythia.conf file
+   - Database settings (if using upload_configs.js)
+
 ### Running the Application
 
 #### Development Mode
@@ -163,15 +172,26 @@ The system intelligently handles grouped test cases:
 
 ### Environment Setup
 
-The backend server expects device configuration files in:
-```
-/home/player2vscpu/Desktop/test-case-dashboard/Docs/dut_configurations/
+The application uses environment variables to configure file paths. Create a `.env` file in the project root:
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit .env and set your paths
+CONFIG_DIR=/path/to/your/device/configs
+PYTHIA_CONFIG=/path/to/your/pythia.conf
 ```
 
-Update the paths in `server/server.js` if your configuration files are in a different location:
-```javascript
-const CONFIG_DIR = '/path/to/your/device/configs';
-const PYTHIA_CONFIG_PATH = '/path/to/your/pythia.conf';
+The application will use these environment variables, or fall back to default paths if not set.
+
+For database configuration (used by `upload_configs.js`):
+```bash
+DB_USER=testcase_user
+DB_HOST=localhost
+DB_NAME=testcase_configs
+DB_PASSWORD=yourpassword
+DB_PORT=5432
 ```
 
 ### Test Case Mapping
