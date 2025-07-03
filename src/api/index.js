@@ -69,3 +69,30 @@ export const fetchDeviceConfig = async (model) => {
     throw error;
   }
 };
+
+export const saveDeviceConfig = async (model, content) => {
+  try {
+    console.log(`Saving config for model "${model}" to:`, `${API_URL}/device`);
+    console.log(`Content length: ${content.length} bytes`);
+    
+    const response = await fetch(`${API_URL}/device`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ model, content })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to save configuration');
+    }
+    
+    const data = await response.json();
+    console.log('Save response:', data);
+    return data;
+  } catch (error) {
+    console.error('Error saving device config:', error);
+    throw error;
+  }
+};

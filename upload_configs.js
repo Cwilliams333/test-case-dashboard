@@ -11,8 +11,8 @@ const pool = new Pool({
 });
 
 async function uploadConfigs() {
-  const configDir = '/home/player3vsgpt/Documents/dut_configurations';
-  const pythiaPath = '/home/player3vsgpt/Documents/pythia.conf';
+  const configDir = '/home/player2vscpu/Desktop/test-case-dashboard/Docs/dut_configurations';
+  const pythiaPath = '/home/player2vscpu/Desktop/test-case-dashboard/Docs/pythia.conf';
 
   try {
     // Upload device configs (.ini files)

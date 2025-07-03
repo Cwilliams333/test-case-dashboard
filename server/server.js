@@ -7,8 +7,8 @@ const app = express();
 const PORT = 3001;
 
 // Define paths to your configuration files
-const CONFIG_DIR = '/home/..;
-const PYTHIA_CONFIG_PATH = '/home/... ;
+const CONFIG_DIR = '/home/player2vscpu/Desktop/test-case-dashboard/Docs/dut_configurations';
+const PYTHIA_CONFIG_PATH = '/home/player2vscpu/Desktop/test-case-dashboard/Docs/pythia.conf';
 
 // Function to determine the correct manufacturer based on model name
 const categorizeManufacturer = (modelName) => {
@@ -38,6 +38,13 @@ const categorizeManufacturer = (modelName) => {
 // Enable CORS and JSON parsing
 app.use(cors());
 app.use(express.json());
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${req.method} ${req.path} ${req.query ? JSON.stringify(req.query) : ''}`);
+  next();
+});
 
 // IMPORTANT: Properly serve static files from the build directory
 // This should come BEFORE the API routes
@@ -144,6 +151,7 @@ app.get('/api/pythia-config', (req, res) => {
 app.get('/api/device', (req, res) => {
   try {
     const modelName = req.query.model;
+    console.log(`[GET CONFIG] Request for model: ${modelName}`);
     
     if (!modelName) {
       return res.status(400).json({ error: 'Model name is required as a query parameter' });
@@ -193,6 +201,60 @@ app.get('/api/device', (req, res) => {
   } catch (error) {
     console.error('Error reading device config:', error);
     res.status(500).json({ error: 'Failed to read device configuration' });
+  }
+});
+
+// API endpoint to save device configuration
+app.put('/api/device', (req, res) => {
+  try {
+    const { model, content } = req.body;
+    
+    console.log(`[SAVE CONFIG] Request to save config for model: ${model}`);
+    console.log(`[SAVE CONFIG] Content length: ${content ? content.length : 0} bytes`);
+    
+    if (!model || !content) {
+      console.log(`[SAVE CONFIG] ERROR: Missing required fields - model: ${!!model}, content: ${!!content}`);
+      return res.status(400).json({ error: 'Model name and content are required' });
+    }
+    
+    // Extract model code from the formatted name
+    const modelCodeMatch = model.match(/\(([^)]+)\)$/);
+    if (!modelCodeMatch) {
+      console.log(`[SAVE CONFIG] ERROR: Could not extract model code from: ${model}`);
+      return res.status(400).json({ error: 'Invalid model format' });
+    }
+    
+    const modelCode = modelCodeMatch[1];
+    const fileName = `${modelCode}.ini`;
+    const filePath = path.join(CONFIG_DIR, fileName);
+    
+    console.log(`[SAVE CONFIG] Writing to file: ${filePath}`);
+    
+    // Create backup first
+    if (fs.existsSync(filePath)) {
+      const backupPath = filePath + '.backup';
+      fs.copyFileSync(filePath, backupPath);
+      console.log(`[SAVE CONFIG] Backup created: ${backupPath}`);
+    }
+    
+    // Write the new content
+    fs.writeFileSync(filePath, content, 'utf8');
+    console.log(`[SAVE CONFIG] Successfully saved config for ${model}`);
+    
+    // Verify the file was written
+    const savedContent = fs.readFileSync(filePath, 'utf8');
+    console.log(`[SAVE CONFIG] Verification - File size after save: ${savedContent.length} bytes`);
+    console.log(`[SAVE CONFIG] First 200 chars of saved file:`, savedContent.substring(0, 200));
+    
+    res.json({ 
+      success: true, 
+      message: `Configuration saved successfully for ${model}`,
+      fileName: fileName
+    });
+    
+  } catch (error) {
+    console.error('[SAVE CONFIG] ERROR:', error);
+    res.status(500).json({ error: `Failed to save configuration: ${error.message}` });
   }
 });
 

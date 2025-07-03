@@ -3,7 +3,7 @@ import Modal from './Modal';
 import SyntaxHighlighter from './SyntaxHighlighter';
 import { testCaseMapping, iniSectionToTestMapping } from '../data/testCaseMapping';
 import { parseIniContent, randomDate } from '../utils/parseConfig';
-import { fetchManufacturers, fetchDeviceConfig } from '../api';
+import { fetchManufacturers, fetchDeviceConfig, saveDeviceConfig } from '../api';
 
 const TestCaseMonitoringDashboard = () => {
   // State management
@@ -29,6 +29,8 @@ const TestCaseMonitoringDashboard = () => {
   const [configModalTitle, setConfigModalTitle] = useState('');
   const [configModalContent, setConfigModalContent] = useState('');
   const [editedConfigContent, setEditedConfigContent] = useState('');
+  const [notification, setNotification] = useState(null);
+  const [isToggling, setIsToggling] = useState(false);
 
   // Debug utility
   const debugLog = (message, ...args) => {
@@ -85,8 +87,283 @@ const TestCaseMonitoringDashboard = () => {
     setEditedConfigContent(newContent);
   };
 
+  // Function to validate INI file structure
+  const validateIniFile = (content) => {
+    const lines = content.split('\n');
+    let inSection = false;
+    let hasErrors = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue; // Skip empty lines
+      
+      // Check for section headers
+      if (line.match(/^#?\[.+\]$/)) {
+        inSection = true;
+      } else if (inSection && line.match(/^[^=\s]+\s*=.*$/)) {
+        // Valid key-value pair
+        continue;
+      } else if (inSection && line.startsWith('#')) {
+        // Comment line in section
+        continue;
+      } else if (inSection) {
+        // Invalid line in section
+        hasErrors = true;
+        break;
+      }
+    }
+    
+    return !hasErrors;
+  };
+
+  // Function to remove ALL occurrences of a section (both commented and uncommented)
+  const removeAllSectionOccurrences = (content, sectionName) => {
+    const lines = content.split('\n');
+    const result = [];
+    let inTargetSection = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmedLine = line.trim();
+      
+      // Check if we're at ANY occurrence of the target section
+      if (trimmedLine === `[${sectionName}]` || trimmedLine === `#[${sectionName}]`) {
+        inTargetSection = true;
+        continue; // Skip this line
+      }
+      // Check if we've reached a new section
+      else if (trimmedLine.match(/^#?\[.+\]$/)) {
+        inTargetSection = false;
+        result.push(line);
+      }
+      // Skip lines within the target section
+      else if (inTargetSection) {
+        continue;
+      }
+      // Keep other lines
+      else {
+        result.push(line);
+      }
+    }
+    
+    return result.join('\n');
+  };
+
+  // Function to add a section at the end of the file
+  const addSectionToConfig = (content, sectionName, sectionContent, shouldDisable) => {
+    const prefix = shouldDisable ? '#' : '';
+    const sectionLines = [`${prefix}[${sectionName}]`];
+    
+    // Add section content
+    sectionContent.split('\n').forEach(line => {
+      if (line.trim()) {
+        sectionLines.push(shouldDisable ? '#' + line : line);
+      }
+    });
+    
+    // Ensure content ends with a newline before adding new section
+    let newContent = content.trimEnd();
+    
+    // Add two line breaks before the first moved section for proper spacing
+    newContent += '\n\n' + sectionLines.join('\n');
+    
+    return newContent;
+  };
+
+  // Function to get section content from existing config
+  const getSectionContent = (content, sectionName) => {
+    const lines = content.split('\n');
+    const sectionContent = [];
+    let inSection = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmedLine = line.trim();
+      
+      if (trimmedLine === `[${sectionName}]` || trimmedLine === `#[${sectionName}]`) {
+        inSection = true;
+        continue;
+      } else if (trimmedLine.match(/^#?\[.+\]$/)) {
+        if (inSection) break;
+      } else if (inSection) {
+        // Remove comment prefix if present
+        sectionContent.push(line.replace(/^#/, ''));
+      }
+    }
+    
+    return sectionContent.join('\n');
+  };
+
+  // Function to toggle sections properly
+  const toggleSectionInConfig = (content, sectionName, shouldDisable) => {
+    // First check if section exists at all (commented or uncommented)
+    const sectionRegex = new RegExp(`^#?\\[${sectionName}\\]`, 'gm');
+    const sectionExists = content.match(sectionRegex);
+    
+    if (!sectionExists) {
+      return { content: content, found: false };
+    }
+    
+    // Get the section content
+    const sectionContent = getSectionContent(content, sectionName);
+    
+    // Remove all occurrences of the section
+    let newContent = removeAllSectionOccurrences(content, sectionName);
+    
+    // Add the section back with proper state
+    if (sectionContent) {
+      newContent = addSectionToConfig(newContent, sectionName, sectionContent, shouldDisable);
+      return { content: newContent, found: true };
+    }
+    
+    return { content: content, found: false };
+  };
+
+  // Function to toggle test case enabled/disabled state
+  const handleToggleTestCase = async (testCaseId, currentStatus) => {
+    if (!selectedModel || !deviceConfigs[selectedModel] || isToggling) return;
+    
+    setIsToggling(true);
+    
+    try {
+      // Get current config content
+      let configContent = deviceConfigs[selectedModel];
+      const shouldDisable = currentStatus === 'enabled';
+      
+      // Find which sections map to this test case
+      const sectionsToToggle = [];
+      Object.entries(iniSectionToTestMapping).forEach(([section, testId]) => {
+        if (testId === testCaseId) {
+          sectionsToToggle.push(section);
+        }
+      });
+      
+      if (sectionsToToggle.length === 0) {
+        throw new Error('No sections found for this test case');
+      }
+      
+      // Toggle each section
+      let sectionsFound = 0;
+      let sectionsNotFound = [];
+      
+      sectionsToToggle.forEach(section => {
+        const result = toggleSectionInConfig(configContent, section, shouldDisable);
+        if (result.found) {
+          configContent = result.content;
+          sectionsFound++;
+        } else {
+          sectionsNotFound.push(section);
+        }
+      });
+      
+      // Only throw error if NO sections were found
+      if (sectionsFound === 0) {
+        throw new Error(`No sections found for this test case. Looking for: ${sectionsToToggle.join(', ')}`);
+      }
+      
+      // Log which sections weren't found (for debugging)
+      if (sectionsNotFound.length > 0) {
+        console.log(`[TOGGLE] Some sections not found (this is OK): ${sectionsNotFound.join(', ')}`);
+      }
+      
+      // Validate the modified content
+      if (!validateIniFile(configContent)) {
+        throw new Error('Invalid INI file format after modification');
+      }
+      
+      // Save the changes
+      setEditedConfigContent(configContent);
+      saveConfigChangesFromToggle(configContent, shouldDisable);
+      
+    } catch (err) {
+      console.error('Error toggling test case:', err);
+      setNotification(`Error: ${err.message}`);
+      setTimeout(() => setNotification(null), 3000);
+      setIsToggling(false);
+    }
+  };
+
+  // Modified save function for toggle changes
+  const saveConfigChangesFromToggle = async (newContent, wasDisabled) => {
+    try {
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      
+      // Update the device configs
+      setDeviceConfigs(prev => ({
+        ...prev,
+        [selectedModel]: newContent
+      }));
+      
+      // Update test cases
+      const updatedTestCases = generateTestCasesFromConfig(selectedModel, newContent);
+      const testCasesWithNewDate = updatedTestCases.map(tc => ({
+        ...tc,
+        modified: formattedDate
+      }));
+      
+      setTestCases(prev => ({
+        ...prev,
+        [selectedModel]: testCasesWithNewDate
+      }));
+      
+      // Update filtered test cases
+      if (selectedModel) {
+        let filtered = [...testCasesWithNewDate];
+        if (activeView === 'disabled') filtered = filtered.filter(tc => tc.status === 'disabled');
+        else if (activeView === 'changes') {
+          filtered = filtered.filter(tc => tc.modified === formattedDate);
+        }
+        if (sortField) {
+          filtered.sort((a, b) => {
+            let comparison = 0;
+            if (sortField === 'testCase') comparison = a.testCase.localeCompare(b.testCase);
+            else if (sortField === 'status') comparison = a.status.localeCompare(b.status);
+            else if (sortField === 'modified') comparison = new Date(a.modified) - new Date(b.modified);
+            return sortDirection === 'asc' ? comparison : -comparison;
+          });
+        }
+        setFilteredTestCases(filtered);
+      }
+      
+      setLastUpdated(now.toLocaleString());
+      
+      // Save to disk
+      try {
+        await saveDeviceConfig(selectedModel, newContent);
+        console.log(`[FRONTEND] Successfully saved config to disk for ${selectedModel}`);
+        
+        // Update the in-memory config to match what was saved
+        setConfigModalContent(newContent);
+        setEditedConfigContent(newContent);
+        
+        // Show success notification
+        const action = wasDisabled ? 'disabled' : 'enabled';
+        setNotification(`Test case successfully ${action} and saved to disk`);
+      } catch (saveError) {
+        console.error('[FRONTEND] Failed to save to disk:', saveError);
+        setNotification(`Test case ${wasDisabled ? 'disabled' : 'enabled'} locally but failed to save to disk: ${saveError.message}`);
+      }
+      
+      // Auto-dismiss notification and reset toggling state
+      setTimeout(() => {
+        setNotification(null);
+        setIsToggling(false);
+      }, 3000);
+      
+    } catch (err) {
+      console.error('Error toggling test case:', err);
+      setError(`Failed to toggle test case: ${err.message}`);
+      setIsToggling(false);
+    }
+  };
+
   // Function to handle saving the edited content
-  const saveConfigChanges = () => {
+  const saveConfigChanges = async () => {
     try {
       debugLog('Saving changes with content length:', editedConfigContent.length);
       
@@ -140,9 +417,27 @@ const TestCaseMonitoringDashboard = () => {
       // Update the last updated timestamp
       setLastUpdated(now.toLocaleString());
       
-      // Show success message
-      const baseName = extractBaseName(selectedModel);
-      alert(`Configuration for ${baseName} has been saved successfully.`);
+      // Close the modal
+      setShowConfigModal(false);
+      
+      // Save to disk
+      try {
+        await saveDeviceConfig(selectedModel, editedConfigContent);
+        console.log(`[FRONTEND] Successfully saved config to disk for ${selectedModel}`);
+        
+        // Show success notification
+        const baseName = extractBaseName(selectedModel);
+        setNotification(`Configuration for ${baseName} has been saved successfully to disk.`);
+      } catch (saveError) {
+        console.error('[FRONTEND] Failed to save to disk:', saveError);
+        const baseName = extractBaseName(selectedModel);
+        setNotification(`Configuration for ${baseName} updated locally but failed to save to disk: ${saveError.message}`);
+      }
+      
+      // Auto-dismiss notification after 3 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 3000);
       
     } catch (err) {
       console.error('Error saving configuration:', err);
@@ -151,25 +446,40 @@ const TestCaseMonitoringDashboard = () => {
   };
 
   // Handle showing the configuration for a model
-  const showModelConfig = useCallback((model) => {
+  const showModelConfig = useCallback(async (model) => {
     const modelCode = extractModelCode(model);
     const baseName = extractBaseName(model);
     
-    if (!modelCode || !deviceConfigs[model]) {
+    if (!modelCode) {
       setError(`Configuration file for ${baseName} is not available.`);
       return;
     }
     
-    debugLog(`Opening config for ${baseName}`, {
-      contentLength: deviceConfigs[model].length,
-      firstFewChars: deviceConfigs[model].substring(0, 50)
-    });
-    
-    setConfigModalTitle(`${baseName} Configuration (${modelCode}.ini)`);
-    setConfigModalContent(deviceConfigs[model]);
-    setEditedConfigContent(deviceConfigs[model]);
-    setShowConfigModal(true);
-  }, [deviceConfigs, extractBaseName, extractModelCode]);
+    try {
+      // Always fetch fresh config from server
+      console.log(`Fetching fresh config for model: "${model}"`);
+      const freshConfig = await fetchDeviceConfig(model);
+      
+      // Update the stored config
+      setDeviceConfigs(prev => ({
+        ...prev,
+        [model]: freshConfig
+      }));
+      
+      debugLog(`Opening config for ${baseName}`, {
+        contentLength: freshConfig.length,
+        firstFewChars: freshConfig.substring(0, 50)
+      });
+      
+      setConfigModalTitle(`${baseName} Configuration (${modelCode}.ini)`);
+      setConfigModalContent(freshConfig);
+      setEditedConfigContent(freshConfig);
+      setShowConfigModal(true);
+    } catch (err) {
+      console.error('Error fetching fresh config:', err);
+      setError(`Failed to load configuration for ${baseName}`);
+    }
+  }, [extractBaseName, extractModelCode]);
 
   // Memoized mapping for grouping sections
   const groupedSections = useMemo(() => {
@@ -183,25 +493,32 @@ const TestCaseMonitoringDashboard = () => {
     return result;
   }, []);
 
-  // Core test case generator (unchanged)
+  // Core test case generator - FIXED to properly handle grouped tests
   const generateTestCasesFromConfig = useCallback((model, configContent) => {
     const { sections, disabledSections } = parseIniContent(configContent);
     const testCaseStatus = {};
-    testCaseMapping.forEach(([testId]) => { testCaseStatus[testId] = false; });
-    testCaseStatus["root.RootTest"] = true;
-    Object.keys(sections).forEach(sectionName => {
-      const testId = iniSectionToTestMapping[sectionName];
-      if (testId) testCaseStatus[testId] = true;
+    
+    // Initialize all tests as disabled
+    testCaseMapping.forEach(([testId]) => { 
+      testCaseStatus[testId] = false; 
     });
+    
+    // Root test is always enabled
+    testCaseStatus["root.RootTest"] = true;
+    
+    // For each test, check if ANY of its sections are enabled
     Object.entries(groupedSections).forEach(([testId, relatedSections]) => {
       if (testId === "root.RootTest") return;
-      const sectionsInConfig = relatedSections.filter(section => sections[section]);
-      const disabledSectionsForTest = relatedSections.filter(section => 
-        disabledSections.includes(section)
-      );
-      if (sectionsInConfig.length > 0 && disabledSectionsForTest.length === sectionsInConfig.length) testCaseStatus[testId] = false;
-      if (sectionsInConfig.length === 0) testCaseStatus[testId] = false;
+      
+      // Check if ANY section for this test is enabled (not disabled)
+      const hasEnabledSection = relatedSections.some(section => {
+        // Section is enabled if it exists in sections AND is NOT in disabledSections
+        return sections[section] && !disabledSections.includes(section);
+      });
+      
+      testCaseStatus[testId] = hasEnabledSection;
     });
+    
     return testCaseMapping.map(([testId, displayName]) => ({
       id: `TC-${testId.split('.')[0]}`,
       testId,
@@ -840,7 +1157,12 @@ const renderComparisonTable = () => {
                     {sortField === 'status' && <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </button>
                 </th>
-                <th className="p-4 md:w-1/3">
+                <th className="p-4 md:w-1/6">
+                  <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray'}`}>
+                    Toggle
+                  </span>
+                </th>
+                <th className="p-4 md:w-1/4">
                   <button 
                     className={`flex items-center gap-1 text-left font-medium ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray hover:text-dark'}`}
                     onClick={() => handleSort('modified')}
@@ -857,13 +1179,13 @@ const renderComparisonTable = () => {
             <tbody className={darkMode ? 'text-gray-300' : ''}>
               {!selectedModel ? (
                 <tr>
-                  <td className={`p-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray'}`} colSpan="3">
+                  <td className={`p-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray'}`} colSpan="4">
                     Please select a manufacturer and model to view test cases
                   </td>
                 </tr>
               ) : filteredTestCases.length === 0 ? (
                 <tr>
-                  <td className={`p-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray'}`} colSpan="3">
+                  <td className={`p-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray'}`} colSpan="4">
                     No test cases match the selected filters
                   </td>
                 </tr>
@@ -892,6 +1214,35 @@ const renderComparisonTable = () => {
                         }`}></span>
                         {tc.status === 'enabled' ? 'Enabled' : 'Disabled'}
                       </span>
+                    </td>
+                    <td className="p-4">
+                      {['touch.TouchTest', 'display.DisplayTest', 'root.RootTest'].includes(tc.testId) ? (
+                        <span className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                          N/A
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleToggleTestCase(tc.testId, tc.status)}
+                          disabled={isToggling}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                            isToggling 
+                              ? 'opacity-50 cursor-not-allowed'
+                              : tc.status === 'enabled'
+                                ? darkMode
+                                  ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+                                  : 'bg-green-500 hover:bg-green-600 focus:ring-green-400'
+                                : darkMode
+                                  ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
+                                  : 'bg-red-500 hover:bg-red-600 focus:ring-red-400'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              tc.status === 'enabled' ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      )}
                     </td>
                     <td className="p-4">{tc.modified}</td>
                   </tr>
@@ -1253,6 +1604,24 @@ const renderComparisonTable = () => {
             />
           </Modal>
         )}
+
+        {/* Success/Error Notification */}
+        {notification && (
+          <div className={`fixed bottom-4 right-4 ${
+            notification.toLowerCase().includes('error') || notification.toLowerCase().includes('failed')
+              ? darkMode ? 'bg-red-600' : 'bg-red-500'
+              : darkMode ? 'bg-green-600' : 'bg-green-500'
+          } text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in`}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {notification.toLowerCase().includes('error') || notification.toLowerCase().includes('failed') ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              )}
+            </svg>
+            <span>{notification}</span>
+          </div>
+        )}
       </div>
       
       {/* CSS for comparison mode */}
@@ -1270,6 +1639,21 @@ const renderComparisonTable = () => {
         .comparison-table td:first-child {
           min-width: 180px;
           max-width: 300px;
+        }
+        
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
         }
       `}</style>
     </div>
