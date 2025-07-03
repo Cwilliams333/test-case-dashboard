@@ -53,13 +53,12 @@ export const testCaseMapping = [
     "BackCamera4": "camerarearphoto.CameraRearPhotoTest",
     "BackCamera5": "camerarearphoto.CameraRearPhotoTest",
     "GPS": "gps.GPSTest",
-    "Truedepth": "faceid.FaceIDTest",
+    "Truedepth": "faceid.FaceIDTest|lidar.LidarTest",
     "Display": "display.DisplayTest",
     "Dimensions": "touch.TouchTest",
     "CameraControlButton": "cameracontrol.CameraControlTest",
     "SilentSwitch": "switch.SwitchTest",
     "Wifi": "wifi.WifiTest",
     "CameraTorchflash_1": "flash.FlashTest",
-    "Truedepth": "lidar.LidarTest"
   };
   

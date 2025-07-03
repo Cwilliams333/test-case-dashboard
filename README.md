@@ -1,17 +1,21 @@
-# Device Test Case Monitoring Dashboard
+# Test Case Monitoring Dashboard
 
-A comprehensive web application for monitoring and tracking test case status across different device configurations. This dashboard allows for efficient comparison of test results across multiple device models and manufacturers.
+A comprehensive web application for monitoring and managing test case configurations across different mobile devices. This dashboard allows real-time toggling of test cases, comparison across devices, and direct editing of device configuration files.
 
 
 ## Features
 
 - **Device Management**: Browse and select from multiple device manufacturers (Apple, Google, Samsung, Motorola, TCL, etc.)
 - **Test Case Tracking**: Monitor which tests are enabled or disabled for each device
+- **Real-time Toggle Switches**: Enable/disable test cases with toggle switches that directly modify device configuration files
+- **Smart Test Grouping**: Automatically handles grouped tests (e.g., all button types for Button test, all speakers for Speaker test)
 - **Comparison Mode**: Compare test statuses across multiple devices simultaneously
-- **Configuration Viewer/Editor**: View and edit device configurations with syntax highlighting
+- **Configuration Viewer/Editor**: View and edit device configurations with syntax highlighting and real-time updates
+- **File Synchronization**: Changes are saved directly to device configuration files with automatic backup creation
 - **Filtering Options**: Filter test cases by status (all, disabled, recent changes)
-- **Export Capabilities**: Export test case reports in CSV format
+- **Export Capabilities**: Export test case reports and comparisons in CSV format
 - **Dark/Light Mode**: Toggle between dark and light interface themes
+- **Error Notifications**: Visual feedback with color-coded notifications (green for success, red for errors)
 - **Responsive Design**: Works on desktop and mobile browsers
 
 ## Technology Stack
@@ -28,36 +32,55 @@ A comprehensive web application for monitoring and tracking test case status acr
 
 - Node.js (v14.0 or higher)
 - npm (v7.0 or higher)
+- Device configuration files (.ini) in the designated directory
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/device-test-monitoring-dashboard.git
-   cd device-test-monitoring-dashboard
+   git clone https://github.com/Cwilliams333/test-case-dashboard.git
+   cd test-case-dashboard
    ```
 
-2. Install dependencies:
+2. Install dependencies for both frontend and backend:
    ```bash
    npm install
+   cd server && npm install
+   cd ..
    ```
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+### Running the Application
 
-4. Build for production:
+#### Development Mode
+To run both frontend and backend servers concurrently:
+```bash
+npm run dev
+```
+- Frontend: http://localhost:3000
+- Backend: http://localhost:3001
+
+#### Production Mode
+1. Build the frontend:
    ```bash
    npm run build
    ```
 
-5. Start the production server:
+2. Run the production server:
    ```bash
-   npm start
+   npm run prod
    ```
+   The application will be served at http://localhost:3001
 
-The application will be available at `http://localhost:3001`.
+#### Alternative Production Start
+Use the shell script for automated production deployment:
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+### Individual Server Commands
+- Frontend only: `npm start` (port 3000)
+- Backend only: `npm run server` (port 3001)
 
 ## Project Structure
 
@@ -85,6 +108,7 @@ The dashboard communicates with a Node.js backend server through these endpoints
 - `GET /api/devices` - Get all manufacturers and device models
 - `GET /api/pythia-config` - Get Pythia configuration mapping
 - `GET /api/device?model=[modelName]` - Get device configuration by model name
+- `PUT /api/device` - Save device configuration changes to disk
 
 ## Configuration Files
 
@@ -101,7 +125,16 @@ The system reads and processes `.ini` configuration files with device specificat
 1. Select a manufacturer (e.g., Apple)
 2. Choose a specific device model (e.g., iPhone 14 Pro)
 3. View enabled/disabled test cases
-4. Click "View Configuration" to see or edit the raw config file
+4. Use toggle switches to enable/disable test cases in real-time
+5. Click "View Configuration" to see or edit the raw config file
+
+### Toggle Test Cases
+
+1. Select a device from the sidebar
+2. Use the toggle switches in the "Toggle" column to enable/disable tests
+3. Changes are immediately saved to the device's .ini file
+4. Green notification confirms success, red indicates errors
+5. Some tests (Touch, Display, Root) cannot be toggled
 
 ### Multi-Device Comparison
 
@@ -112,10 +145,57 @@ The system reads and processes `.ini` configuration files with device specificat
 
 ### Configuration Editing
 
-1. Select a device and view its configuration
+1. Select a device and click "View Configuration File"
 2. Toggle "Edit Mode" in the configuration viewer
 3. Make desired changes to the configuration
-4. Save changes to update the test case statuses
+4. Click "Save" to persist changes to disk
+5. Modal automatically shows updated content after saving
+
+### Test Case Grouping
+
+The system intelligently handles grouped test cases:
+- **Button Test**: Toggles all button types (Power, VolumeUp, VolumeDown, Action)
+- **Speaker Test**: Requires ALL speakers to be disabled for test to show as disabled
+- **Mic Test**: Handles multiple microphone inputs
+- **Camera Tests**: Manages front and rear camera configurations
+
+## Configuration
+
+### Environment Setup
+
+The backend server expects device configuration files in:
+```
+/home/player2vscpu/Desktop/test-case-dashboard/Docs/dut_configurations/
+```
+
+Update the paths in `server/server.js` if your configuration files are in a different location:
+```javascript
+const CONFIG_DIR = '/path/to/your/device/configs';
+const PYTHIA_CONFIG_PATH = '/path/to/your/pythia.conf';
+```
+
+### Test Case Mapping
+
+Test cases are mapped to INI sections in `src/data/testCaseMapping.js`. To add new test cases:
+1. Add to the `testCaseMapping` array
+2. Map INI sections to test IDs in `iniSectionToTestMapping`
+
+## Troubleshooting
+
+### "Failed to load manufacturers" Error
+- Ensure the backend server is running (`npm run server`)
+- Check that configuration directory exists and contains .ini files
+- Verify the CONFIG_DIR path in server.js
+
+### Toggle Switch Not Working
+- Check browser console for errors
+- Ensure the test case has corresponding sections in the INI file
+- Some tests (Touch, Display, Root) are intentionally non-toggleable
+
+### Configuration Not Saving
+- Check file permissions on the configuration directory
+- Look for server logs showing save attempts
+- Verify backup files are being created (.ini.backup)
 
 ## Contributing
 
@@ -134,3 +214,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Test framework integration with mobile device configurations
 - Advanced React patterns for efficient state management
 - Responsive design principles with Tailwind CSS
+- Real-time file synchronization and backup management

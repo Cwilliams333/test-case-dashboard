@@ -100,15 +100,20 @@ const TestCaseMonitoringDashboard = () => {
       // Check for section headers
       if (line.match(/^#?\[.+\]$/)) {
         inSection = true;
-      } else if (inSection && line.match(/^[^=\s]+\s*=.*$/)) {
-        // Valid key-value pair
+      } else if (inSection && line.match(/^#?[^=\s]+\s*=.*$/)) {
+        // Valid key-value pair (commented or uncommented)
         continue;
-      } else if (inSection && line.startsWith('#')) {
-        // Comment line in section
+      } else if (!inSection && line.startsWith('#')) {
+        // Comment line outside section is OK
         continue;
       } else if (inSection) {
-        // Invalid line in section
+        // Check if it's a comment line that doesn't look like a key-value pair
+        if (line.startsWith('#') && !line.match(/^#[^=\s]+\s*=.*$/)) {
+          continue; // Allow comment lines in sections
+        }
+        // Otherwise it's an invalid line
         hasErrors = true;
+        console.log(`[VALIDATE] Invalid line in section: ${line}`);
         break;
       }
     }
@@ -121,6 +126,7 @@ const TestCaseMonitoringDashboard = () => {
     const lines = content.split('\n');
     const result = [];
     let inTargetSection = false;
+    let sectionDepth = 0;
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -129,12 +135,21 @@ const TestCaseMonitoringDashboard = () => {
       // Check if we're at ANY occurrence of the target section
       if (trimmedLine === `[${sectionName}]` || trimmedLine === `#[${sectionName}]`) {
         inTargetSection = true;
+        sectionDepth++;
         continue; // Skip this line
       }
       // Check if we've reached a new section
       else if (trimmedLine.match(/^#?\[.+\]$/)) {
-        inTargetSection = false;
-        result.push(line);
+        // Only exit target section if it's not another occurrence of our target
+        if (!trimmedLine.includes(`[${sectionName}]`)) {
+          if (inTargetSection && sectionDepth > 0) {
+            sectionDepth--;
+            if (sectionDepth === 0) {
+              inTargetSection = false;
+            }
+          }
+          result.push(line);
+        }
       }
       // Skip lines within the target section
       else if (inTargetSection) {
@@ -146,7 +161,22 @@ const TestCaseMonitoringDashboard = () => {
       }
     }
     
-    return result.join('\n');
+    // Clean up excessive blank lines
+    const cleanedResult = [];
+    let prevBlank = false;
+    for (const line of result) {
+      if (line.trim() === '') {
+        if (!prevBlank) {
+          cleanedResult.push(line);
+          prevBlank = true;
+        }
+      } else {
+        cleanedResult.push(line);
+        prevBlank = false;
+      }
+    }
+    
+    return cleanedResult.join('\n');
   };
 
   // Function to add a section at the end of the file
@@ -173,25 +203,66 @@ const TestCaseMonitoringDashboard = () => {
   // Function to get section content from existing config
   const getSectionContent = (content, sectionName) => {
     const lines = content.split('\n');
-    const sectionContent = [];
+    const sectionContent = {};
     let inSection = false;
+    let foundUncommented = false;
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmedLine = line.trim();
       
-      if (trimmedLine === `[${sectionName}]` || trimmedLine === `#[${sectionName}]`) {
+      // Check if we're at the start of our target section
+      if (trimmedLine === `[${sectionName}]`) {
         inSection = true;
+        foundUncommented = true;
         continue;
-      } else if (trimmedLine.match(/^#?\[.+\]$/)) {
-        if (inSection) break;
-      } else if (inSection) {
-        // Remove comment prefix if present
-        sectionContent.push(line.replace(/^#/, ''));
+      } else if (trimmedLine === `#[${sectionName}]`) {
+        // Only process commented sections if we haven't found an uncommented one
+        if (!foundUncommented) {
+          inSection = true;
+        }
+        continue;
+      } 
+      // Check if we've reached a new section
+      else if (trimmedLine.match(/^#?\[.+\]$/)) {
+        if (inSection && foundUncommented) break; // Stop if we were in an uncommented section
+        inSection = false; // Reset for commented sections
+      } 
+      // Process lines within the section
+      else if (inSection) {
+        // For uncommented sections, only take uncommented lines
+        if (foundUncommented) {
+          if (!trimmedLine.startsWith('#') && trimmedLine) {
+            const match = line.match(/^([^=]+)=(.*)$/);
+            if (match) {
+              const key = match[1].trim();
+              const value = match[2].trim();
+              // Only keep the last occurrence of each key
+              sectionContent[key] = value;
+            }
+          }
+        } 
+        // For commented sections, take lines and strip # prefix
+        else {
+          const uncommentedLine = line.replace(/^#/, '');
+          const match = uncommentedLine.match(/^([^=]+)=(.*)$/);
+          if (match) {
+            const key = match[1].trim();
+            const value = match[2].trim();
+            // Only keep the last occurrence of each key
+            sectionContent[key] = value;
+          }
+        }
       }
     }
     
-    return sectionContent.join('\n');
+    // Convert back to string format
+    const result = [];
+    for (const [key, value] of Object.entries(sectionContent)) {
+      result.push(`${key} = ${value}`);
+    }
+    
+    return result.join('\n');
   };
 
   // Function to toggle sections properly
@@ -201,11 +272,15 @@ const TestCaseMonitoringDashboard = () => {
     const sectionExists = content.match(sectionRegex);
     
     if (!sectionExists) {
+      console.log(`[TOGGLE] Section ${sectionName} not found in config`);
       return { content: content, found: false };
     }
     
+    console.log(`[TOGGLE] Processing section ${sectionName}, shouldDisable: ${shouldDisable}`);
+    
     // Get the section content
     const sectionContent = getSectionContent(content, sectionName);
+    console.log(`[TOGGLE] Section content extracted:`, sectionContent);
     
     // Remove all occurrences of the section
     let newContent = removeAllSectionOccurrences(content, sectionName);
@@ -213,9 +288,11 @@ const TestCaseMonitoringDashboard = () => {
     // Add the section back with proper state
     if (sectionContent) {
       newContent = addSectionToConfig(newContent, sectionName, sectionContent, shouldDisable);
+      console.log(`[TOGGLE] Section ${sectionName} toggled successfully`);
       return { content: newContent, found: true };
     }
     
+    console.log(`[TOGGLE] No valid content found for section ${sectionName}`);
     return { content: content, found: false };
   };
 
