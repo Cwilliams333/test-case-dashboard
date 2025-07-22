@@ -1,22 +1,41 @@
 # Test Case Monitoring Dashboard
 
-A comprehensive web application for monitoring and managing test case configurations across different mobile devices. This dashboard allows real-time toggling of test cases, comparison across devices, and direct editing of device configuration files.
+A comprehensive web application for monitoring and managing test case configurations across different mobile devices. This dashboard provides real-time test case management, multi-device comparison, advanced export capabilities, and direct configuration file editing with an intuitive dark-mode interface.
 
+## Screenshots
+
+### Dark Mode Interface with Multi-Device Comparison
+![Test Case Monitoring Dashboard - Dark Mode](screenshots/main-dashboard-dark.png)
+*Main dashboard showing multi-device comparison in dark mode with device selection dropdown*
+
+### Disabled Test Cases Filter View
+![Disabled Test Cases View](screenshots/disabled-tests-view.png)
+*Filtered view showing only disabled test cases with count indicators for each device*
 
 ## Features
 
+### Core Functionality
 - **Device Management**: Browse and select from multiple device manufacturers (Apple, Google, Samsung, Motorola, TCL, etc.)
-- **Test Case Tracking**: Monitor which tests are enabled or disabled for each device
+- **Test Case Tracking**: Monitor which tests are enabled or disabled for each device with real-time status updates
 - **Real-time Toggle Switches**: Enable/disable test cases with toggle switches that directly modify device configuration files
 - **Smart Test Grouping**: Automatically handles grouped tests (e.g., all button types for Button test, all speakers for Speaker test)
-- **Comparison Mode**: Compare test statuses across multiple devices simultaneously
+
+### Advanced Features
+- **Dark Mode Support**: Professional dark theme with persistent preference storage via localStorage
+- **Multi-Device Comparison Mode**: Compare test statuses across multiple devices simultaneously with visual indicators
+- **Export Functionality**: 
+  - **Excel Export**: Generates XLSX files with conditional formatting (red highlighting for disabled test cases)
+  - **CSV Export**: Plain text format for universal compatibility
+  - **Custom Format Selection**: Modal dialog for choosing export format
 - **Configuration Viewer/Editor**: View and edit device configurations with syntax highlighting and real-time updates
+- **Auto-Refresh**: Configurable automatic data refresh to keep information current
+
+### User Experience
+- **Filtering Options**: Three viewing modes - All Test Cases, Disabled Only, Recent Changes
 - **File Synchronization**: Changes are saved directly to device configuration files with automatic backup creation
-- **Filtering Options**: Filter test cases by status (all, disabled, recent changes)
-- **Export Capabilities**: Export test case reports and comparisons in CSV format
-- **Dark/Light Mode**: Toggle between dark and light interface themes
 - **Error Notifications**: Visual feedback with color-coded notifications (green for success, red for errors)
-- **Responsive Design**: Works on desktop and mobile browsers
+- **Responsive Design**: Optimized for both desktop and mobile browsers
+- **Disabled Test Count**: Real-time count display showing number of disabled tests per device
 
 ## Technology Stack
 
@@ -147,10 +166,21 @@ The system reads and processes `.ini` configuration files with device specificat
 
 ### Multi-Device Comparison
 
-1. Toggle "Enter Comparison Mode"
-2. Select multiple devices from the same manufacturer
+1. Click "Exit Comparison Mode" to toggle into comparison mode
+2. Select multiple devices from the dropdown (up to 22 models displayed)
 3. View a side-by-side comparison of test case statuses
-4. Export the comparison as a CSV report
+4. Monitor disabled test counts for each device
+5. Use the "Disabled Only" filter to focus on problematic tests
+6. Export comparisons using the Export Report button
+
+### Exporting Data
+
+1. In comparison mode, click "Export Report"
+2. Choose your preferred format:
+   - **Excel (.xlsx)**: Includes red cell highlighting for disabled test cases
+   - **CSV (.csv)**: Simple comma-separated format for universal compatibility
+3. File downloads automatically with timestamp in filename
+4. Excel exports include conditional formatting for easy visual scanning
 
 ### Configuration Editing
 
@@ -159,6 +189,13 @@ The system reads and processes `.ini` configuration files with device specificat
 3. Make desired changes to the configuration
 4. Click "Save" to persist changes to disk
 5. Modal automatically shows updated content after saving
+
+### Using Dark Mode
+
+1. Click the sun/moon icon in the top bar to toggle themes
+2. Dark mode preference is saved automatically
+3. Interface adapts all colors for optimal visibility
+4. Works consistently across all views and modals
 
 ### Test Case Grouping
 
