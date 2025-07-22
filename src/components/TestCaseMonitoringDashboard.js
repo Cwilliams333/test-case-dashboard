@@ -4,6 +4,7 @@ import SyntaxHighlighter from './SyntaxHighlighter';
 import { testCaseMapping, iniSectionToTestMapping } from '../data/testCaseMapping';
 import { parseIniContent, randomDate } from '../utils/parseConfig';
 import { fetchManufacturers, fetchDeviceConfig, saveDeviceConfig } from '../api';
+import * as XLSX from 'xlsx-js-style';
 
 const TestCaseMonitoringDashboard = () => {
   // State management
@@ -909,8 +910,27 @@ const TestCaseMonitoringDashboard = () => {
     setSortField(null);
   };
 
-  // Export data to CSV
+  // State for export modal
+  const [showExportModal, setShowExportModal] = useState(false);
+
+  // Export data with format selection
   const exportData = () => {
+    setShowExportModal(true);
+  };
+
+  // Handle export format selection
+  const handleExportFormat = (format) => {
+    setShowExportModal(false);
+    if (format === 'excel') {
+      exportAsExcel();
+    } else if (format === 'csv') {
+      exportAsCSV();
+    }
+    // If format is null/undefined, just close the modal (cancel)
+  };
+
+  // Export as CSV
+  const exportAsCSV = () => {
     if (isComparisonMode) {
       if (selectedModels.length === 0) {
         alert('Please select at least one model before exporting.');
@@ -1008,6 +1028,259 @@ const TestCaseMonitoringDashboard = () => {
       } catch (err) {
         console.error('Error exporting data:', err);
         alert('Failed to export data. Please check the console for details.');
+      }
+    }
+  };
+
+  // Export as Excel with conditional formatting
+  const exportAsExcel = () => {
+    if (isComparisonMode) {
+      if (selectedModels.length === 0) {
+        alert('Please select at least one model before exporting.');
+        return;
+      }
+      
+      try {
+        // Create data array for Excel
+        let testCaseList = [];
+        
+        // First, collect all test cases
+        testCaseMapping.forEach(([testId, displayName]) => {
+          testCaseList.push({
+            testCase: displayName,
+            testId,
+            models: {}
+          });
+        });
+        
+        // Fill in status for each model
+        selectedModels.forEach(model => {
+          if (testCases[model]) {
+            testCases[model].forEach(tc => {
+              const testCaseIndex = testCaseList.findIndex(item => item.testId === tc.testId);
+              if (testCaseIndex !== -1) {
+                testCaseList[testCaseIndex].models[model] = tc.status;
+              }
+            });
+          }
+        });
+        
+        // Build data array with headers
+        const headers = ['Test Case'];
+        selectedModels.forEach(model => {
+          const baseName = extractBaseName(model);
+          headers.push(baseName);
+        });
+        
+        const data = [headers];
+        
+        // Add data rows
+        testCaseList.forEach(tc => {
+          const row = [tc.testCase];
+          selectedModels.forEach(model => {
+            const status = tc.models[model] || 'unknown';
+            row.push(status);
+          });
+          data.push(row);
+        });
+        
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // Apply conditional formatting - red fill/black text for "disabled" cells
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        
+        // Style header row
+        for (let C = 0; C <= range.e.c; C++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+          if (ws[cellAddress]) {
+            ws[cellAddress].s = {
+              fill: {
+                fgColor: { rgb: "E0E0E0" }
+              },
+              font: {
+                bold: true
+              },
+              border: {
+                top: { style: "thin", color: { rgb: "000000" } },
+                bottom: { style: "thin", color: { rgb: "000000" } },
+                left: { style: "thin", color: { rgb: "000000" } },
+                right: { style: "thin", color: { rgb: "000000" } }
+              }
+            };
+          }
+        }
+        
+        // Style data cells
+        for (let R = 1; R <= range.e.r; R++) {
+          for (let C = 0; C <= range.e.c; C++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = ws[cellAddress];
+            
+            if (cell) {
+              // Base style for all cells
+              cell.s = {
+                border: {
+                  top: { style: "thin", color: { rgb: "CCCCCC" } },
+                  bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                  left: { style: "thin", color: { rgb: "CCCCCC" } },
+                  right: { style: "thin", color: { rgb: "CCCCCC" } }
+                }
+              };
+              
+              // Apply red background for disabled cells
+              if (cell.v === 'disabled') {
+                cell.s.fill = {
+                  fgColor: { rgb: "FF0000" }
+                };
+                cell.s.font = {
+                  color: { rgb: "000000" },
+                  bold: true
+                };
+              }
+            }
+          }
+        }
+        
+        // Auto-fit columns
+        const colWidths = [];
+        for (let C = 0; C <= range.e.c; C++) {
+          let maxWidth = 10;
+          for (let R = 0; R <= range.e.r; R++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = ws[cellAddress];
+            if (cell && cell.v) {
+              const cellLength = cell.v.toString().length;
+              if (cellLength > maxWidth) {
+                maxWidth = cellLength;
+              }
+            }
+          }
+          colWidths.push({ wch: maxWidth + 2 });
+        }
+        ws['!cols'] = colWidths;
+        
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Test Results");
+        
+        // Write to file
+        const dateStr = new Date().toISOString().split('T')[0];
+        const fileName = `Multiple_Models_Comparison_${dateStr}.xlsx`;
+        
+        XLSX.writeFile(wb, fileName, { bookType: 'xlsx', type: 'binary' });
+        
+      } catch (err) {
+        console.error('Error exporting Excel data:', err);
+        alert('Failed to export Excel data. Please check the console for details.');
+      }
+    } else {
+      // Single model Excel export
+      if (!selectedModel || !filteredTestCases.length) {
+        alert('Please select a model with test cases before exporting.');
+        return;
+      }
+      
+      try {
+        // Build data array
+        const data = [
+          ['Test Case', 'Status', 'Last Modified']
+        ];
+        
+        filteredTestCases.forEach(tc => {
+          data.push([tc.testCase, tc.status, tc.modified]);
+        });
+        
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // Apply conditional formatting
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        
+        // Style header row
+        for (let C = 0; C <= 2; C++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+          if (ws[cellAddress]) {
+            ws[cellAddress].s = {
+              fill: {
+                fgColor: { rgb: "E0E0E0" }
+              },
+              font: {
+                bold: true
+              },
+              border: {
+                top: { style: "thin", color: { rgb: "000000" } },
+                bottom: { style: "thin", color: { rgb: "000000" } },
+                left: { style: "thin", color: { rgb: "000000" } },
+                right: { style: "thin", color: { rgb: "000000" } }
+              }
+            };
+          }
+        }
+        
+        // Style data cells
+        for (let R = 1; R <= range.e.r; R++) {
+          for (let C = 0; C <= 2; C++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = ws[cellAddress];
+            
+            if (cell) {
+              // Base style for all cells
+              cell.s = {
+                border: {
+                  top: { style: "thin", color: { rgb: "CCCCCC" } },
+                  bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+                  left: { style: "thin", color: { rgb: "CCCCCC" } },
+                  right: { style: "thin", color: { rgb: "CCCCCC" } }
+                }
+              };
+              
+              // Apply red background for disabled cells in status column (column 1)
+              if (C === 1 && cell.v === 'disabled') {
+                cell.s.fill = {
+                  fgColor: { rgb: "FF0000" }
+                };
+                cell.s.font = {
+                  color: { rgb: "000000" },
+                  bold: true
+                };
+              }
+            }
+          }
+        }
+        
+        // Auto-fit columns
+        const colWidths = [];
+        for (let C = 0; C <= 2; C++) {
+          let maxWidth = 10;
+          for (let R = 0; R <= range.e.r; R++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = ws[cellAddress];
+            if (cell && cell.v) {
+              const cellLength = cell.v.toString().length;
+              if (cellLength > maxWidth) {
+                maxWidth = cellLength;
+              }
+            }
+          }
+          colWidths.push({ wch: maxWidth + 2 });
+        }
+        ws['!cols'] = colWidths;
+        
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Test Results");
+        
+        // Write to file
+        const baseName = extractBaseName(selectedModel);
+        const dateStr = new Date().toISOString().split('T')[0];
+        const fileName = `${baseName}_TestCases_${dateStr}.xlsx`;
+        
+        XLSX.writeFile(wb, fileName, { bookType: 'xlsx', type: 'binary' });
+        
+      } catch (err) {
+        console.error('Error exporting Excel data:', err);
+        alert('Failed to export Excel data. Please check the console for details.');
       }
     }
   };
@@ -1612,6 +1885,43 @@ const renderComparisonTable = () => {
               onContentChange={handleConfigContentChange}
             />
           </Modal>
+        )}
+
+        {/* Export Format Selection Modal */}
+        {showExportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+                Select Export Format
+              </h2>
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleExportFormat('excel')}
+                  className="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 font-medium"
+                >
+                  Export as Excel
+                  <span className="block text-sm font-normal mt-1 opacity-90">
+                    With red background for disabled cells
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleExportFormat('csv')}
+                  className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 font-medium"
+                >
+                  Export as CSV
+                  <span className="block text-sm font-normal mt-1 opacity-90">
+                    Plain text format
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleExportFormat(null)}
+                  className="w-full px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Success/Error Notification */}

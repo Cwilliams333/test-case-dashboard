@@ -92,7 +92,7 @@ const Modal = ({ children, title, onClose, onSave, isEditable = false }) => {
         </div>
         
         {/* Modal Content */}
-        <div className="p-4 overflow-auto flex-grow">
+        <div className="p-4 overflow-auto grow">
           {childWithProps}
         </div>
         
