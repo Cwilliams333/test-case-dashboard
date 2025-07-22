@@ -1040,7 +1040,7 @@ const renderComparisonTable = () => {
   return (
     <div className="overflow-x-auto">
       {loading ? (
-        <div className={`p-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray'}`}>
+        <div className="p-8 text-center text-gray dark:text-gray-400">
           <div className="inline-block animate-spin mr-2">↻</div>
           Loading test case data...
         </div>
@@ -1048,10 +1048,10 @@ const renderComparisonTable = () => {
         <div className="models-comparison-container">
           <table className="w-full comparison-table">
             <thead>
-              <tr className={`text-left ${darkMode ? 'text-gray-400' : 'text-gray'} text-sm`}>
-                <th className={`p-4 sticky left-0 z-10 ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
+              <tr className="text-left text-gray dark:text-gray-400 text-sm">
+                <th className="p-4 sticky left-0 z-10 bg-gray-200 dark:bg-gray-800">
                   <button 
-                    className={`flex items-center gap-1 text-left font-medium ${darkMode ? 'text-gray-300 hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'}`}
+                    className="flex items-center gap-1 text-left font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-200"
                     onClick={() => handleSort('testCase')}
                   >
                     Test Case
@@ -1069,15 +1069,13 @@ const renderComparisonTable = () => {
                   return (
                     <th key={modelIndex} className="p-4 min-w-[150px] text-center">
                       <button 
-                        className={`flex flex-col items-center justify-center w-full ${
-                          darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900'
-                        }`}
+                        className="flex flex-col items-center justify-center w-full text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                         onClick={() => showModelConfig(model)}
                         title={`Click to view ${fullInfo} configuration file`}
                       >
                         <span className="font-medium">{displayName}</span>
                         {modelCode && (
-                          <span className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                          <span className="text-xs mt-1 text-gray-500 dark:text-gray-500">
                             {modelCode}
                           </span>
                         )}
@@ -1087,10 +1085,10 @@ const renderComparisonTable = () => {
                 })}
               </tr>
             </thead>
-            <tbody className={darkMode ? 'text-gray-300' : ''}>
+            <tbody className="dark:text-gray-300">
               {selectedModels.length === 0 ? (
                 <tr>
-                  <td className={`p-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray'}`} colSpan={selectedModels.length + 1}>
+                  <td className="p-8 text-center text-gray dark:text-gray-400" colSpan={selectedModels.length + 1}>
                     Please select at least one model to compare
                   </td>
                 </tr>
@@ -1098,15 +1096,11 @@ const renderComparisonTable = () => {
                 <>
                   {/* Disabled Count Summary Row - Only show in disabled view */}
                   {activeView === 'disabled' && (
-                    <tr className={`${darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-200 bg-gray-100'} border-b font-bold`}>
+                    <tr className="border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 border-b font-bold">
                       <td className="p-4 sticky left-0 z-10 bg-inherit">Disabled Count</td>
                       {selectedModels.map((model, modelIndex) => (
                         <td key={modelIndex} className="p-4 text-center font-semibold">
-                          <span className={`px-2 py-1 rounded-full ${
-                            darkMode 
-                              ? 'bg-red-900 text-red-100' 
-                              : 'bg-red-100 text-red-700'
-                          }`}>
+                          <span className="px-2 py-1 rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100">
                             {disabledCounts[model] || 0}
                           </span>
                         </td>
@@ -1132,18 +1126,18 @@ const renderComparisonTable = () => {
                     const firstStatusCell = testCases[selectedModels[0]]?.find(test => test.testId === tc.id);
                     const isFirstCellEnabled = firstStatusCell?.status === 'enabled';
                     
-                    const bgColorClass = darkMode 
-                      ? (isFirstCellEnabled ? 'bg-green-900 bg-opacity-20' : 'bg-red-900 bg-opacity-20')
-                      : (isFirstCellEnabled ? 'bg-green-50' : 'bg-red-50');
+                    const bgColorClass = isFirstCellEnabled 
+                      ? 'bg-green-50 dark:bg-green-900 dark:bg-opacity-20'
+                      : 'bg-red-50 dark:bg-red-900 dark:bg-opacity-20';
                     
                     return (
-                      <tr key={index} className={`${darkMode ? 'border-gray-700' : 'border-gray-100'} border-b`}>
+                      <tr key={index} className="border-gray-100 dark:border-gray-700 border-b">
                         <td className={`p-4 sticky left-0 z-10 font-medium ${bgColorClass}`}>
                           <div className="flex items-center">
                             <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
                               isFirstCellEnabled
-                                ? darkMode ? 'bg-green-500' : 'bg-green-500'
-                                : darkMode ? 'bg-red-500' : 'bg-red-500'
+                                ? 'bg-green-500'
+                                : 'bg-red-500'
                             }`}></span>
                             {tc.name}
                           </div>
@@ -1163,21 +1157,13 @@ const renderComparisonTable = () => {
                             <td key={modelIndex} className="p-4 text-center">
                               <span className={`inline-flex items-center justify-center ${
                                 testCase.status === 'enabled' 
-                                  ? darkMode 
-                                    ? 'text-green-400' 
-                                    : 'text-green-600' 
-                                  : darkMode 
-                                    ? 'text-red-400' 
-                                    : 'text-red-600'
+                                  ? 'text-green-600 dark:text-green-400' 
+                                  : 'text-red-600 dark:text-red-400'
                               } font-semibold`}>
                                 <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
                                   testCase.status === 'enabled' 
-                                    ? darkMode 
-                                      ? 'bg-green-500' 
-                                      : 'bg-green-500' 
-                                    : darkMode 
-                                      ? 'bg-red-500' 
-                                      : 'bg-red-500'
+                                    ? 'bg-green-500' 
+                                    : 'bg-red-500'
                                 }`}></span>
                                 {testCase.status === 'enabled' ? 'Enabled' : 'Disabled'}
                               </span>
@@ -1202,17 +1188,17 @@ const renderComparisonTable = () => {
     return (
       <div className="overflow-x-auto">
         {loading ? (
-          <div className={`p-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray'}`}>
+          <div className="p-8 text-center text-gray dark:text-gray-400">
             <div className="inline-block animate-spin mr-2">↻</div>
             Loading test case data...
           </div>
         ) : (
           <table className="w-full">
             <thead>
-              <tr className={`text-left ${darkMode ? 'text-gray-400' : 'text-gray'} text-sm`}>
+              <tr className="text-left text-gray dark:text-gray-400 text-sm">
                 <th className="p-4 md:w-1/3">
                   <button 
-                    className={`flex items-center gap-1 text-left font-medium ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray hover:text-dark'}`}
+                    className="flex items-center gap-1 text-left font-medium text-gray dark:text-gray-400 hover:text-dark dark:hover:text-gray-300"
                     onClick={() => handleSort('testCase')}
                   >
                     Test Case
@@ -1224,7 +1210,7 @@ const renderComparisonTable = () => {
                 </th>
                 <th className="p-4 md:w-1/3">
                   <button 
-                    className={`flex items-center gap-1 text-left font-medium ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray hover:text-dark'}`}
+                    className="flex items-center gap-1 text-left font-medium text-gray dark:text-gray-400 hover:text-dark dark:hover:text-gray-300"
                     onClick={() => handleSort('status')}
                   >
                     Status
@@ -1235,13 +1221,13 @@ const renderComparisonTable = () => {
                   </button>
                 </th>
                 <th className="p-4 md:w-1/6">
-                  <span className={`font-medium ${darkMode ? 'text-gray-400' : 'text-gray'}`}>
+                  <span className="font-medium text-gray dark:text-gray-400">
                     Toggle
                   </span>
                 </th>
                 <th className="p-4 md:w-1/4">
                   <button 
-                    className={`flex items-center gap-1 text-left font-medium ${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray hover:text-dark'}`}
+                    className="flex items-center gap-1 text-left font-medium text-gray dark:text-gray-400 hover:text-dark dark:hover:text-gray-300"
                     onClick={() => handleSort('modified')}
                   >
                     Last Modified
@@ -1253,48 +1239,40 @@ const renderComparisonTable = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className={darkMode ? 'text-gray-300' : ''}>
+            <tbody className="dark:text-gray-300">
               {!selectedModel ? (
                 <tr>
-                  <td className={`p-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray'}`} colSpan="4">
+                  <td className="p-8 text-center text-gray dark:text-gray-400" colSpan="4">
                     Please select a manufacturer and model to view test cases
                   </td>
                 </tr>
               ) : filteredTestCases.length === 0 ? (
                 <tr>
-                  <td className={`p-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray'}`} colSpan="4">
+                  <td className="p-8 text-center text-gray dark:text-gray-400" colSpan="4">
                     No test cases match the selected filters
                   </td>
                 </tr>
               ) : (
                 filteredTestCases.map((tc, index) => (
-                  <tr key={index} className={`${darkMode ? 'border-gray-700' : 'border-gray-100'} border-b`}>
+                  <tr key={index} className="border-gray-100 dark:border-gray-700 border-b">
                     <td className="p-4">{tc.testCase}</td>
                     <td className="p-4">
                       <span className={`flex items-center ${
                         tc.status === 'enabled' 
-                          ? darkMode 
-                            ? 'text-green-400' 
-                            : 'text-secondary-dark' 
-                          : darkMode 
-                            ? 'text-red-400' 
-                            : 'text-danger'
+                          ? 'text-secondary-dark dark:text-green-400' 
+                          : 'text-danger dark:text-red-400'
                       } font-semibold`}>
                         <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
                           tc.status === 'enabled' 
-                            ? darkMode 
-                              ? 'bg-green-500' 
-                              : 'bg-secondary' 
-                            : darkMode 
-                              ? 'bg-red-500' 
-                              : 'bg-danger'
+                            ? 'bg-secondary dark:bg-green-500' 
+                            : 'bg-danger dark:bg-red-500'
                         }`}></span>
                         {tc.status === 'enabled' ? 'Enabled' : 'Disabled'}
                       </span>
                     </td>
                     <td className="p-4">
                       {['touch.TouchTest', 'display.DisplayTest', 'root.RootTest'].includes(tc.testId) ? (
-                        <span className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <span className="text-sm text-gray-400 dark:text-gray-500">
                           N/A
                         </span>
                       ) : (
@@ -1305,12 +1283,8 @@ const renderComparisonTable = () => {
                             isToggling 
                               ? 'opacity-50 cursor-not-allowed'
                               : tc.status === 'enabled'
-                                ? darkMode
-                                  ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
-                                  : 'bg-green-500 hover:bg-green-600 focus:ring-green-400'
-                                : darkMode
-                                  ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
-                                  : 'bg-red-500 hover:bg-red-600 focus:ring-red-400'
+                                ? 'bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 focus:ring-green-400 dark:focus:ring-green-500'
+                                : 'bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 focus:ring-red-400 dark:focus:ring-red-500'
                           }`}
                         >
                           <span
@@ -1342,16 +1316,16 @@ const renderComparisonTable = () => {
     const isSelected = selectedModels.includes(model);
     return `
       mr-1 mb-1 inline-block px-3 py-1 rounded-full text-sm 
-      ${darkMode 
-        ? isSelected ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-        : isSelected ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+      ${isSelected 
+        ? 'bg-blue-100 dark:bg-blue-600 text-blue-700 dark:text-white' 
+        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
       } 
       cursor-pointer transition-colors duration-150
     `;
   };
 
   return (
-    <div className={`${darkMode ? 'dark bg-gray-900' : 'bg-gray-100'} min-h-screen transition-colors duration-200`}>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-6xl mx-auto p-4">
         {/* ERROR ALERT */}
         {error && (
@@ -1371,15 +1345,15 @@ const renderComparisonTable = () => {
         )}
 
         {/* Header */}
-        <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} p-4 rounded-lg shadow mb-4 flex justify-between items-center transition-colors duration-200`}>
+        <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-4 rounded-lg shadow mb-4 flex justify-between items-center transition-colors duration-200">
           <div>
-            <h1 className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-darker'}`}>Test Case Monitoring Dashboard</h1>
-            <div className={`${darkMode ? 'text-gray-400' : 'text-gray'} text-sm`}>Monitor and track test case status across device configurations</div>
+            <h1 className="text-2xl font-semibold text-darker dark:text-white">Test Case Monitoring Dashboard</h1>
+            <div className="text-gray dark:text-gray-400 text-sm">Monitor and track test case status across device configurations</div>
           </div>
           <div className="flex items-center gap-4">
             <button 
               onClick={toggleDarkMode}
-              className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-yellow-400' : 'bg-gray-200 text-gray-700'}`}
+              className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-yellow-400"
               title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {darkMode ? (
@@ -1392,7 +1366,7 @@ const renderComparisonTable = () => {
                 </svg>
               )}
             </button>
-            <div className={`${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-light text-dark'} px-4 py-2 rounded-full text-sm flex items-center transition-colors duration-200`}>
+            <div className="bg-light dark:bg-gray-700 text-dark dark:text-gray-300 px-4 py-2 rounded-full text-sm flex items-center transition-colors duration-200">
               <span className="mr-2">⏱️</span>
               Last updated: {lastUpdated}
             </div>
@@ -1400,16 +1374,16 @@ const renderComparisonTable = () => {
         </div>
         
         {/* Filters */}
-        <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} p-4 rounded-lg shadow mb-4 grid grid-cols-1 md:grid-cols-2 gap-4 transition-colors duration-200`}>
+        <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-4 rounded-lg shadow mb-4 grid grid-cols-1 md:grid-cols-2 gap-4 transition-colors duration-200">
           <div>
-            <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-darker'}`}>Manufacturer</label>
+            <label className="block mb-2 text-sm font-semibold text-darker dark:text-gray-300">Manufacturer</label>
             {Object.keys(manufacturers).length === 0 && !loading ? (
               <div className="text-yellow-500 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200 p-2 rounded mb-2">
                 No manufacturers found. Please check the server connection.
               </div>
             ) : null}
             <select 
-              className={`w-full p-2 border ${darkMode ? 'border-gray-700 bg-gray-700 text-white' : 'border-gray-300 bg-white text-gray-800'} rounded transition-colors duration-200`}
+              className="w-full p-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded transition-colors duration-200"
               value={selectedManufacturer}
               onChange={handleManufacturerChange}
               disabled={loading}
@@ -1423,7 +1397,7 @@ const renderComparisonTable = () => {
           
           {isComparisonMode ? (
             <div>
-              <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-darker'}`}>Select Models to Compare</label>
+              <label className="block mb-2 text-sm font-semibold text-darker dark:text-gray-300">Select Models to Compare</label>
               <div className="max-h-36 overflow-y-auto p-2 border rounded">
                 {selectedManufacturer && manufacturers[selectedManufacturer] ? (
                   manufacturers[selectedManufacturer].length > 0 ? (
@@ -1442,7 +1416,7 @@ const renderComparisonTable = () => {
                           >
                             <span>{displayName}</span>
                             {modelCode && (
-                              <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              <span className="text-xs ml-1 text-gray-500 dark:text-gray-400">
                                 ({modelCode})
                               </span>
                             )}
@@ -1454,19 +1428,19 @@ const renderComparisonTable = () => {
                       })}
                     </div>
                   ) : (
-                    <div className={`${darkMode ? 'text-gray-400' : 'text-gray'}`}>No models available for this manufacturer</div>
+                    <div className="text-gray dark:text-gray-400">No models available for this manufacturer</div>
                   )
                 ) : (
-                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray'}`}>Please select a manufacturer</div>
+                  <div className="text-gray dark:text-gray-400">Please select a manufacturer</div>
                 )}
               </div>
             </div>
           ) : (
             <div>
-              <label className={`block mb-2 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-darker'}`}>Model</label>
+              <label className="block mb-2 text-sm font-semibold text-darker dark:text-gray-300">Model</label>
               <div className="flex items-center">
                 <select 
-                  className={`flex-1 p-2 border ${darkMode ? 'border-gray-700 bg-gray-700 text-white' : 'border-gray-300 bg-white text-gray-800'} rounded-l transition-colors duration-200`}
+                  className="flex-1 p-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-l transition-colors duration-200"
                   value={selectedModel}
                   onChange={handleModelChange}
                   disabled={!selectedManufacturer || loading}
@@ -1480,7 +1454,7 @@ const renderComparisonTable = () => {
                 </select>
                 {selectedModel && (
                   <button
-                    className={`p-2 ${darkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'} rounded-r transition-colors duration-200`}
+                    className="p-2 bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 rounded-r transition-colors duration-200"
                     onClick={() => showModelConfig(selectedModel)}
                     title="View configuration file"
                   >
@@ -1495,16 +1469,12 @@ const renderComparisonTable = () => {
         </div>
         
         {/* Comparison Mode Toggles */}
-        <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} p-4 rounded-lg shadow mb-4 flex flex-wrap gap-3 transition-colors duration-200`}>
+        <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-4 rounded-lg shadow mb-4 flex flex-wrap gap-3 transition-colors duration-200">
           <button 
             className={`px-4 py-2 rounded ${
               isComparisonMode
-                ? darkMode 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-blue-500 text-white' 
-                : darkMode 
-                  ? 'bg-gray-700 text-gray-300' 
-                  : 'bg-gray-200 text-gray-700'
+                ? 'bg-blue-500 dark:bg-blue-600 text-white' 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
             } transition-colors duration-200`}
             onClick={toggleComparisonMode}
             disabled={!selectedManufacturer || loading}
@@ -1515,12 +1485,8 @@ const renderComparisonTable = () => {
           <button 
             className={`px-4 py-2 rounded ${
               showAllManufacturerModels
-                ? darkMode 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-green-500 text-white' 
-                : darkMode 
-                  ? 'bg-gray-700 text-gray-300' 
-                  : 'bg-gray-200 text-gray-700'
+                ? 'bg-green-500 dark:bg-green-600 text-white' 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
             } transition-colors duration-200`}
             onClick={toggleAllManufacturerModels}
             disabled={!selectedManufacturer || loading}
@@ -1528,15 +1494,11 @@ const renderComparisonTable = () => {
             {showAllManufacturerModels ? 'Unselect All Models' : 'Select All Manufacturer Models'}
           </button>
           
-          <div className={`ml-auto ${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm flex items-center`}>
+          <div className="ml-auto text-gray-600 dark:text-gray-400 text-sm flex items-center">
             {isComparisonMode && selectedModels.length > 0 && (
               <>
                 <span className="mr-2">Selected:</span>
-                <span className={`px-2 py-1 rounded-full ${
-                  darkMode 
-                    ? 'bg-blue-900 text-blue-100' 
-                    : 'bg-blue-100 text-blue-700'
-                }`}>
+                <span className="px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-100">
                   {selectedModels.length} models
                 </span>
               </>
@@ -1545,16 +1507,12 @@ const renderComparisonTable = () => {
         </div>
         
         {/* Toggle View */}
-        <div className={`${darkMode ? 'bg-gray-700' : 'bg-light'} rounded-md overflow-hidden flex mb-4 transition-colors duration-200`}>
+        <div className="bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden flex mb-4 transition-colors duration-200">
           <button 
             className={`flex-1 py-2 px-4 text-sm font-semibold ${
               activeView === 'all' 
-                ? darkMode 
-                  ? 'bg-gray-800 text-blue-400 shadow' 
-                  : 'bg-white text-primary shadow' 
-                : darkMode 
-                  ? 'text-gray-400' 
-                  : 'text-gray'
+                ? 'bg-white dark:bg-gray-800 text-primary dark:text-blue-400 shadow' 
+                : 'text-gray dark:text-gray-400'
             } transition-colors duration-200`}
             onClick={() => toggleView('all')}
             disabled={loading}
@@ -1564,12 +1522,8 @@ const renderComparisonTable = () => {
           <button 
             className={`flex-1 py-2 px-4 text-sm font-semibold ${
               activeView === 'disabled' 
-                ? darkMode 
-                  ? 'bg-gray-800 text-blue-400 shadow' 
-                  : 'bg-white text-primary shadow' 
-                : darkMode 
-                  ? 'text-gray-400' 
-                  : 'text-gray'
+                ? 'bg-white dark:bg-gray-800 text-primary dark:text-blue-400 shadow' 
+                : 'text-gray dark:text-gray-400'
             } transition-colors duration-200`}
             onClick={() => toggleView('disabled')}
             disabled={loading}
@@ -1579,12 +1533,8 @@ const renderComparisonTable = () => {
           <button 
             className={`flex-1 py-2 px-4 text-sm font-semibold ${
               activeView === 'changes' 
-                ? darkMode 
-                  ? 'bg-gray-800 text-blue-400 shadow' 
-                  : 'bg-white text-primary shadow' 
-                : darkMode 
-                  ? 'text-gray-400' 
-                  : 'text-gray'
+                ? 'bg-white dark:bg-gray-800 text-primary dark:text-blue-400 shadow' 
+                : 'text-gray dark:text-gray-400'
             } transition-colors duration-200 ${isComparisonMode ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={() => toggleView('changes')}
             disabled={loading || isComparisonMode}
@@ -1597,18 +1547,14 @@ const renderComparisonTable = () => {
         {/* Actions */}
         <div className="flex gap-2 mb-4">
           <button 
-            className={`${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary-dark'} text-white py-2 px-4 rounded flex items-center gap-2 disabled:bg-opacity-70 transition-colors duration-200`}
+            className="bg-primary dark:bg-blue-600 hover:bg-primary-dark dark:hover:bg-blue-700 text-white py-2 px-4 rounded flex items-center gap-2 disabled:bg-opacity-70 transition-colors duration-200"
             onClick={refreshData}
             disabled={loading}
           >
             {loading ? 'Loading...' : <><span>↻</span> Refresh Data</>}
           </button>
           <button 
-            className={`${
-              darkMode 
-                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600' 
-                : 'bg-light text-dark hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400'
-            } py-2 px-4 rounded transition-colors duration-200`}
+            className="bg-light dark:bg-gray-700 text-dark dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-600 py-2 px-4 rounded transition-colors duration-200"
             onClick={exportData}
             disabled={loading || (!isComparisonMode ? !filteredTestCases.length : selectedModels.length === 0)}
           >
@@ -1617,9 +1563,9 @@ const renderComparisonTable = () => {
         </div>
         
         {/* Main Table */}
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow overflow-hidden transition-colors duration-200`}>
-          <div className={`flex justify-between items-center p-4 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-light border-gray-200'} border-b transition-colors duration-200`}>
-            <div className={`font-semibold ${darkMode ? 'text-white' : 'text-darker'}`}>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden transition-colors duration-200">
+          <div className="flex justify-between items-center p-4 bg-light dark:bg-gray-700 border-gray-200 dark:border-gray-600 border-b transition-colors duration-200">
+            <div className="font-semibold text-darker dark:text-white">
               {isComparisonMode ? 'Test Case Comparison' : 'Test Case Status'}
             </div>
             
@@ -1627,29 +1573,17 @@ const renderComparisonTable = () => {
             {!isComparisonMode && filteredTestCases.length > 0 && (
               <div className="flex gap-2">
                 {/* Total tests count */}
-                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  darkMode 
-                    ? 'bg-blue-900 text-blue-100' 
-                    : 'bg-blue-100 text-blue-700'
-                }`}>
+                <div className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-100">
                   {totalTestsCount} Total Tests
                 </div>
                 
                 {/* Enabled tests count */}
-                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  darkMode 
-                    ? 'bg-green-900 text-green-100' 
-                    : 'bg-green-100 text-green-700'
-                }`}>
+                <div className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-100">
                   {enabledCount} Enabled Tests
                 </div>
                 
                 {/* Disabled tests count */}
-                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  darkMode 
-                    ? 'bg-amber-900 text-amber-100' 
-                    : 'bg-amber-100 text-amber-700'
-                }`}>
+                <div className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-100">
                   {disabledCount} Disabled Tests
                 </div>
               </div>
@@ -1661,7 +1595,7 @@ const renderComparisonTable = () => {
         </div>
         
         {/* Footer */}
-        <div className={`text-center ${darkMode ? 'text-gray-500' : 'text-gray'} text-sm mt-8`}>
+        <div className="text-center text-gray dark:text-gray-500 text-sm mt-8">
           Robot Test Case Monitoring System | v1.0.0 | © 2025
         </div>
 
@@ -1670,13 +1604,11 @@ const renderComparisonTable = () => {
           <Modal 
             title={configModalTitle}
             onClose={() => setShowConfigModal(false)}
-            darkMode={darkMode}
             onSave={saveConfigChanges}
             isEditable={true}
           >
             <SyntaxHighlighter 
               content={configModalContent} 
-              darkMode={darkMode}
               onContentChange={handleConfigContentChange}
             />
           </Modal>
@@ -1686,8 +1618,8 @@ const renderComparisonTable = () => {
         {notification && (
           <div className={`fixed bottom-4 right-4 ${
             notification.toLowerCase().includes('error') || notification.toLowerCase().includes('failed')
-              ? darkMode ? 'bg-red-600' : 'bg-red-500'
-              : darkMode ? 'bg-green-600' : 'bg-green-500'
+              ? 'bg-red-500 dark:bg-red-600'
+              : 'bg-green-500 dark:bg-green-600'
           } text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {notification.toLowerCase().includes('error') || notification.toLowerCase().includes('failed') ? (

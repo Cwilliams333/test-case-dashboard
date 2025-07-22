@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dark Mode Debug</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+</head>
+<body>
+  <div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Dark Mode Test</h1>
+      <p class="text-gray-600 dark:text-gray-300">This should change colors when dark mode is toggled.</p>
+      <button onclick="toggleDarkMode()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        Toggle Dark Mode
+      </button>
+    </div>
+  </div>
+  
+  <script>
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      console.log('Dark class on HTML:', document.documentElement.classList.contains('dark'));
+    }
+  </script>
+</body>
+</html>

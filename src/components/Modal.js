@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-const Modal = ({ children, title, onClose, darkMode, onSave, isEditable = false }) => {
+const Modal = ({ children, title, onClose, onSave, isEditable = false }) => {
   const modalRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -59,28 +59,24 @@ const Modal = ({ children, title, onClose, darkMode, onSave, isEditable = false 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" style={{ overflowY: 'auto' }}>
       <div 
         ref={modalRef}
-        className={`w-full max-w-4xl max-h-[90vh] ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'} rounded-lg shadow-lg overflow-hidden transition-colors duration-200 flex flex-col`}
+        className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-gray-900 text-gray-800 dark:text-white rounded-lg shadow-lg overflow-hidden transition-colors duration-200 flex flex-col"
         style={{ maxHeight: '90vh' }}
       >
         {/* Modal Header */}
-        <div className={`flex justify-between items-center p-4 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'} border-b sticky top-0 z-10`}>
+        <div className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 border-b sticky top-0 z-10">
           <h3 className="text-lg font-semibold">{title}</h3>
           <div className="flex items-center gap-2">
             {isEditable && (
               <button
                 onClick={toggleEditMode}
-                className={`px-3 py-1 rounded text-sm ${
-                  darkMode 
-                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                } transition-colors duration-150`}
+                className="px-3 py-1 rounded text-sm bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-150"
               >
                 {isEditing ? 'View Mode' : 'Edit Mode'}
               </button>
             )}
             <button
               onClick={onClose}
-              className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-150`}
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-150"
             >
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -101,26 +97,18 @@ const Modal = ({ children, title, onClose, darkMode, onSave, isEditable = false 
         </div>
         
         {/* Modal Footer */}
-        <div className={`flex justify-end p-4 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'} border-t sticky bottom-0 z-10`}>
+        <div className="flex justify-end p-4 bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 border-t sticky bottom-0 z-10">
           {isEditing && (
             <button
               onClick={handleSave}
-              className={`px-4 py-2 rounded mr-2 ${
-                darkMode 
-                  ? 'bg-green-600 text-white hover:bg-green-700' 
-                  : 'bg-green-500 text-white hover:bg-green-600'
-              } transition-colors duration-200`}
+              className="px-4 py-2 rounded mr-2 bg-green-500 dark:bg-green-600 text-white hover:bg-green-600 dark:hover:bg-green-700 transition-colors duration-200"
             >
               Save Changes
             </button>
           )}
           <button
             onClick={onClose}
-            className={`px-4 py-2 rounded ${
-              darkMode 
-                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            } transition-colors duration-200`}
+            className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
           >
             Close
           </button>

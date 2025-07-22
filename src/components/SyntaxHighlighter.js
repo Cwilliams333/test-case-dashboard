@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const SyntaxHighlighter = ({ content, darkMode, isEditing, onContentChange }) => {
+const SyntaxHighlighter = ({ content, isEditing, onContentChange }) => {
   // Keep track of the editable content
   const [editableContent, setEditableContent] = useState(content || '');
 
@@ -30,11 +30,7 @@ const SyntaxHighlighter = ({ content, darkMode, isEditing, onContentChange }) =>
       <textarea
         value={editableContent}
         onChange={handleChange}
-        className={`w-full h-[70vh] p-2 font-mono text-sm border rounded focus:outline-none focus:ring-2 ${
-          darkMode 
-            ? 'bg-gray-800 text-gray-200 border-gray-700 focus:ring-blue-500' 
-            : 'bg-white text-gray-800 border-gray-300 focus:ring-blue-400'
-        }`}
+        className="w-full h-[70vh] p-2 font-mono text-sm border rounded focus:outline-none focus:ring-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-700 focus:ring-blue-400 dark:focus:ring-blue-500"
         spellCheck="false"
       />
     );
@@ -48,13 +44,13 @@ const SyntaxHighlighter = ({ content, darkMode, isEditing, onContentChange }) =>
   // Split the content into lines
   const lines = content.split('\n');
   
-  // Text colors based on dark/light mode
+  // Text colors using Tailwind dark mode classes
   const colors = {
-    section: darkMode ? 'text-yellow-300' : 'text-orange-600',
-    comment: darkMode ? 'text-gray-500' : 'text-gray-500',
-    key: darkMode ? 'text-blue-400' : 'text-blue-600',
-    value: darkMode ? 'text-green-400' : 'text-green-600',
-    default: darkMode ? 'text-gray-300' : 'text-gray-800',
+    section: 'text-orange-600 dark:text-yellow-300',
+    comment: 'text-gray-500 dark:text-gray-500',
+    key: 'text-blue-600 dark:text-blue-400',
+    value: 'text-green-600 dark:text-green-400',
+    default: 'text-gray-800 dark:text-gray-300',
   };
 
   // Group the lines by section for proper spacing

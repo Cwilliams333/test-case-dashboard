@@ -2,8 +2,29 @@
 module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
+    "./public/index.html",
   ],
   darkMode: 'class', // Enable dark mode with class strategy
+  safelist: [
+    // Specific classes that must be included
+    'bg-gray-100',
+    'dark:bg-gray-900',
+    'bg-white',
+    'dark:bg-gray-800',
+    'dark:bg-gray-700',
+    'dark:bg-black',
+    'text-gray-800',
+    'dark:text-white',
+    'dark:text-gray-200',
+    'dark:text-gray-300',
+    'dark:text-gray-400',
+    'dark:border-gray-700',
+    'dark:border-gray-600',
+    // Pattern for dark mode colors
+    { pattern: /bg-gray-(100|800|900)/ },
+    { pattern: /text-gray-(200|300|400|500|600|700|800)/ },
+    { pattern: /border-gray-(200|600|700)/ },
+  ],
   theme: {
     extend: {
       colors: {

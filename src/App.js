@@ -1,13 +1,11 @@
 import React from 'react';
 import TestCaseMonitoringDashboard from './components/TestCaseMonitoringDashboard';
-import './App.css';
+// import TestDark from './test-dark';
 
 function App() {
-  return (
-    <div className="App">
-      <TestCaseMonitoringDashboard />
-    </div>
-  );
+  // Uncomment to test dark mode:
+  // return <TestDark />;
+  return <TestCaseMonitoringDashboard />;
 }
 
 export default App;
